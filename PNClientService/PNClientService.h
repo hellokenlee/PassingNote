@@ -1,6 +1,9 @@
 #ifndef PN_CLIENT_SERVICE_H
 #define PN_CLIENT_SERVICE_H
 
+#include <queue>
+
+using std::queue;
 /*************************************
 *
 *              客户端服务

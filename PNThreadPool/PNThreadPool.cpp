@@ -1,22 +1,22 @@
-#include "threadPool.h"
+#include "PNThreadPool.h"
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 
 //构造函数
-threadPool::threadPool(int threadNum){
+PNThreadPool::PNThreadPool(int threadNum){
     isRunning_ = true;
     threadsNum_ = threadNum;
     //创建相应数量的线程
     createThreads();
 }
 
-threadPool::~threadPool(){
+PNThreadPool::~PNThreadPool(){
     stop();
 }
 
 //创建相应数量的线程
-int threadPool::createThreads(){
+int PNThreadPool::createThreads(){
     pthread_mutex_init(&mutex_, NULL);
     pthread_cond_init(&condition_, NULL);
     threads_ = (pthread_t*)malloc(sizeof(pthread_t) * threadsNum_);
@@ -29,7 +29,7 @@ int threadPool::createThreads(){
 }
 
 //停止线程池, 等待每一个线程join,同时释放掉线程,和mutex,condition变量
-void threadPool::stop(){
+void PNThreadPool::stop(){
     if(!isRunning_){
         return;
     }
@@ -47,7 +47,7 @@ void threadPool::stop(){
 }
 
 //添加任务仅任务队列
-size_t threadPool::addTask(const Task& task){
+size_t PNThreadPool::addTask(const Task& task){
     pthread_mutex_lock(&mutex_);
 
     taskQueue_.push_back(task);
@@ -58,7 +58,7 @@ size_t threadPool::addTask(const Task& task){
     return size;
 }
 
-int threadPool::size(){
+int PNThreadPool::size(){
     pthread_mutex_lock(&mutex_);
     int size = taskQueue_.size(); //获取任务队列大小
     pthread_mutex_unlock(&mutex_);
@@ -66,7 +66,7 @@ int threadPool::size(){
 }
 
 //取任务队列中的任务,若队列中没有任务,阻塞在condition中, 同时释放mutex给其他线程使用
-threadPool::Task threadPool::take(){
+PNThreadPool::Task PNThreadPool::take(){
     Task task = nullptr;
     pthread_mutex_lock(&mutex_);
     while(taskQueue_.empty() && isRunning_){
@@ -87,12 +87,12 @@ threadPool::Task threadPool::take(){
 }
 
 //线程执行的函数
-void* threadPool::threadFunc(void *arg){
+void* PNThreadPool::threadFunc(void *arg){
     pthread_t pid = pthread_self();
-    threadPool* pool = static_cast<threadPool*>(arg);
+    PNThreadPool* pool = static_cast<PNThreadPool*>(arg);
 
     while( pool -> isRunning_){
-        threadPool::Task task = pool->take();
+        PNThreadPool::Task task = pool->take();
         if(!task){
             printf("thread %lu will exit\n" , pid);
             break;
