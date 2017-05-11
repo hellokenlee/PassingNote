@@ -5,8 +5,8 @@
 
 //构造函数
 PNThreadPool::PNThreadPool(int threadNum){
-    isRunning_ = true;
-    threadsNum_ = threadNum;
+    isRunning = true;
+    threadsNum = threadNum;
     //创建相应数量的线程
     createThreads();
 }
@@ -17,12 +17,12 @@ PNThreadPool::~PNThreadPool(){
 
 //创建相应数量的线程
 int PNThreadPool::createThreads(){
-    pthread_mutex_init(&mutex_, NULL);
-    pthread_cond_init(&condition_, NULL);
-    threads_ = (pthread_t*)malloc(sizeof(pthread_t) * threadsNum_);
+    pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init(&condition, NULL);
+    threads = (pthread_t*)malloc(sizeof(pthread_t) * threadsNum);
 
-    for(int i = 0 ; i < threadsNum_ ; ++i){
-        pthread_create(&threads_[i] , NULL, threadFunc, this);
+    for(int i = 0 ; i < threadsNum ; ++i){
+        pthread_create(&threads[i] , NULL, threadFunc, this);
     }
 
     return 0;
@@ -30,59 +30,59 @@ int PNThreadPool::createThreads(){
 
 //停止线程池, 等待每一个线程join,同时释放掉线程,和mutex,condition变量
 void PNThreadPool::stop(){
-    if(!isRunning_){
+    if(!isRunning){
         return;
     }
-    isRunning_ = false;
-    pthread_cond_broadcast(&condition_);//让所有条件变量释放
+    isRunning = false;
+    pthread_cond_broadcast(&condition);//让所有条件变量释放
 
-    for(int i = 0 ; i < threadsNum_ ; ++i){
-        pthread_join(threads_[i],NULL);///第二个参数可以用来获取线程执行函数得到的返回值
+    for(int i = 0 ; i < threadsNum ; ++i){
+        pthread_join(threads[i],NULL);///第二个参数可以用来获取线程执行函数得到的返回值
     }
-    free(threads_);
-    threads_ = nullptr;
+    free(threads);
+    threads = nullptr;
 
-    pthread_mutex_destroy(&mutex_);
-    pthread_cond_destroy(&condition_);
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&condition);
 }
 
 //添加任务仅任务队列
 size_t PNThreadPool::addTask(const Task& task){
-    pthread_mutex_lock(&mutex_);
+    pthread_mutex_lock(&mutex);
 
-    taskQueue_.push_back(task);
-    int size = taskQueue_.size();
+    taskQueue.push_back(task);
+    int size = taskQueue.size();
 
-    pthread_cond_signal(&condition_);
-    pthread_mutex_unlock(&mutex_);
+    pthread_cond_signal(&condition);
+    pthread_mutex_unlock(&mutex);
     return size;
 }
 
 int PNThreadPool::size(){
-    pthread_mutex_lock(&mutex_);
-    int size = taskQueue_.size(); //获取任务队列大小
-    pthread_mutex_unlock(&mutex_);
+    pthread_mutex_lock(&mutex);
+    int size = taskQueue.size(); //获取任务队列大小
+    pthread_mutex_unlock(&mutex);
     return size;
 }
 
 //取任务队列中的任务,若队列中没有任务,阻塞在condition中, 同时释放mutex给其他线程使用
 PNThreadPool::Task PNThreadPool::take(){
     Task task = nullptr;
-    pthread_mutex_lock(&mutex_);
-    while(taskQueue_.empty() && isRunning_){
-        pthread_cond_wait(&condition_, &mutex_);
+    pthread_mutex_lock(&mutex);
+    while(taskQueue.empty() && isRunning){
+        pthread_cond_wait(&condition, &mutex);
     }
 
-    if(!isRunning_){
-        pthread_mutex_unlock(&mutex_);
+    if(!isRunning){
+        pthread_mutex_unlock(&mutex);
         return task;
     }
-    assert(!taskQueue_.empty());
+    assert(!taskQueue.empty());
 
-    task = taskQueue_.front();
-    taskQueue_.pop_front();
+    task = taskQueue.front();
+    taskQueue.pop_front();
 
-    pthread_mutex_unlock(&mutex_);
+    pthread_mutex_unlock(&mutex);
     return task;
 }
 
@@ -91,7 +91,7 @@ void* PNThreadPool::threadFunc(void *arg){
     pthread_t pid = pthread_self();
     PNThreadPool* pool = static_cast<PNThreadPool*>(arg);
 
-    while( pool -> isRunning_){
+    while( pool -> isRunning){
         PNThreadPool::Task task = pool->take();
         if(!task){
             printf("thread %lu will exit\n" , pid);
