@@ -3,6 +3,8 @@
 
 #include <string>
 #include <unordered_map>
+#include "../PNSocketStruct/PNSocketStruct.h"
+#include "../PNThreadPool/PNThreadPool.h"
 
 using std::string;
 using std::pair;
@@ -15,14 +17,9 @@ using std::unordered_map;
 
 class PNServer{
 public:
-    /***
-            构造函数 ,
-            PNServer(const int port ) 指定端口号
-            PNServer() 由系统分配端口号
-    ***/
-    PNServer(const int port);
-    PNServer();
-
+    //构造函数, 默认参数为6666
+    PNServer(const int port_ = 6666);
+    ~PNServer();
     /***
             start 开启服务,调用listen函数
             stop 关闭服务,close(listenfd)
@@ -60,9 +57,13 @@ private:
     PNServer(const PNServer &other);
     PNServer operator = (const PNServer &other);
 private:
+    volatile bool isRunning;
     ///服务器端口号
+
     int port;
     ///用户地址<userName, <userIP, userPort>>
+    PNSocketStruct socketStruct;
+    PNThreadPool threadPool;
     unordered_map<std::string, pair<std::string, int>> userAddress;
     ///用户状态<userName, userStatus>
     unordered_map<std::string, int> userStatus;
