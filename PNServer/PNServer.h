@@ -51,19 +51,15 @@ public:
     const int getUserStatus(const std::string userName);
 
 private:
-    /***
-        禁止拷贝和拷贝构造函数操作
-    ***/
+    //禁止拷贝和拷贝构造函数操作
     PNServer(const PNServer &other);
     PNServer operator = (const PNServer &other);
 private:
-    volatile bool isRunning;
-    ///服务器端口号
+    volatile bool isRunning;//服务器运行状态
 
-    int port;
-    ///用户地址<userName, <userIP, userPort>>
-    PNSocketStruct socketStruct;
-    PNThreadPool threadPool;
+    PNSocketStruct socketStruct;//服务器网络结构
+    PNThreadPool threadPool; //服务器线程池
+    PNEpollManager  epollManager;
     unordered_map<std::string, pair<std::string, int>> userAddress;
     ///用户状态<userName, userStatus>
     unordered_map<std::string, int> userStatus;

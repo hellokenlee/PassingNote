@@ -6,6 +6,13 @@
 #include <functional>
 
 
+
+/************************************
+
+        ThreadPool类, 用于管理多线程
+
+************************************/
+
 /**
 template< class R, class... Args >
 class function<R(Args...)>
