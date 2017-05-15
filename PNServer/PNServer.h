@@ -3,8 +3,9 @@
 
 #include <string>
 #include <unordered_map>
-#include "../PNSocketStruct/PNSocketStruct.h"
-#include "../PNThreadPool/PNThreadPool.h"
+#include "PNEpollManager.h"
+#include "PNThreadPool.h"
+#include "../Common/PNSocketStruct.h"
 
 using std::string;
 using std::pair;
