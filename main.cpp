@@ -1,13 +1,11 @@
 #include "PNServer/PNServer.h"
 #include "PNClientInterface/PNClientInterface.h"
 #include "PNClientService/PNClientService.h"
-#include "PNThreadPool/PNThreadPool.h"
+#include "PNServer/PNEpollManager.h"
 #include <iostream>
 #include <functional>
+#include <signal.h>
 
-int test(int i){
-    std::cout<< i << std::endl;
-}
 // 测试函数
 int main(){
     PNServer server;

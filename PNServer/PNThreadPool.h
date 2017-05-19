@@ -13,6 +13,7 @@
 
 ************************************/
 
+class PNServer;//声明
 /**
 template< class R, class... Args >
 class function<R(Args...)>
@@ -20,16 +21,17 @@ class function<R(Args...)>
 class PNThreadPool{
 
 public:
-    typedef std::function<int()> Task;    //function对象, 用于作为线程执行的函数对象
+    typedef std::function<void()> Task;    //function对象, 用于作为线程执行的函数对象
 
 public:
-    explicit PNThreadPool(int threadNum = 10);    //构造函数
+    explicit PNThreadPool(int threadNum = 3);    //构造函数
     ~PNThreadPool();  //析构线程池
 
     size_t addTask(const Task& task);    //添加任务
     void stop(); //线程池停止
     int size(); //返回任务队列数量
     Task take(); //取出任务
+    void waitJoining();
 
 private:
     int createThreads(); //创建定量线程

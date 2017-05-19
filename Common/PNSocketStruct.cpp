@@ -18,12 +18,6 @@ PNSocketStruct::PNSocketStruct(int port_, int fd_):isRunning(true), addr(nullptr
     if(bind(fd, (struct sockaddr*)addr, sizeof(struct sockaddr)) < 0){
         printf("bind error \n");
     }
-    /**
-    测试代码
-    printf("%s\n", inet_ntoa(addr->sin_addr));
-    IPAddress =  std::string(inet_ntoa(addr->sin_addr), strlen(inet_ntoa(addr->sin_addr)));
-    printf("%s", IPAddress.c_str());
-    **/
 }
 
 

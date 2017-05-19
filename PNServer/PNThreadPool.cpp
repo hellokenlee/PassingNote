@@ -23,6 +23,7 @@ int PNThreadPool::createThreads(){
 
     for(int i = 0 ; i < threadsNum ; ++i){
         pthread_create(&threads[i] , NULL, threadFunc, this);
+        //pthread_detach(threads[i]);
     }
 
     return 0;
@@ -100,7 +101,15 @@ void* PNThreadPool::threadFunc(void *arg){
 
         assert(task);
         task(); ///调用函数对象,可以通过函数对象获取返回值
+        task = nullptr;
         //printf("res : %d,",i);
     }
     return 0;
+}
+
+
+void PNThreadPool::waitJoining(){
+    for(int i = 0; i < threadsNum; ++i){
+        pthread_join(threads[i], nullptr);
+    }
 }

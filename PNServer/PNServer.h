@@ -6,6 +6,7 @@
 #include "PNEpollManager.h"
 #include "PNThreadPool.h"
 #include "../Common/PNSocketStruct.h"
+#include <mutex>
 
 using std::string;
 using std::pair;
@@ -19,42 +20,34 @@ using std::unordered_map;
 class PNServer{
 public:
     //构造函数, 默认参数为6666
-    PNServer(const int port_ = 6666);
+    PNServer(int port_ = 6667, int maxVal = 66666);
     ~PNServer();
-    /***
-            start 开启服务,调用listen函数
-            stop 关闭服务,close(listenfd)
-    ***/
+
     void start();
     void stop();
 
-    /**
-        sendMsg2User 转发来自某客户端的消息,发送给用户userName ,
-        函数处理中需要添加上发送方的信息如 将msg 增加至 SourceUser : msg
-    **/
+
     bool sendMsg2User(const std::string userName,const std::string msg);
-    /***
-        addUser 添加新用户,用于有新的用户登录服务器
-    ***/
+    //sendMsg2User 转发来自某客户端的消息,发送给用户userName ,
+    //函数处理中需要添加上发送方的信息如 将msg 增加至 SourceUser : msg
+
     void addUser(const std::string userName, pair<std::string,int> address);
+    //addUser 添加新用户,用于有新的用户登录服务器
 
-    /***
-        changeUserAddress  改变用户地址,用户地址包括IP地址 + 端口号, 用于用户再次登录时IP地址与端口号的改变
-    ***/
     void changeUserAddress(const std::string userName, pair<std::string,int> address);
+    //changeUserAddress  改变用户地址,用户地址包括IP地址 + 端口号, 用于用户再次登录时IP地址与端口号的改变
 
-    /***
-        对用户状态进行操作的成员方法
-        setUserStatus  设置用户状态 0 : 离线  1 :　在线
-        getUserStatus   返回用户状态
-    ***/
-    void setUserStatus(const std::string userName, const int status);
-    const int getUserStatus(const std::string userName);
+    void setUserStatus(const std::string userName, const int status);   //setUserStatus  设置用户状态 0 : 离线  1 :　在线
+    const int getUserStatus(const std::string userName);   //getUserStatus   返回用户状态
 
 private:
     //禁止拷贝和拷贝构造函数操作
     PNServer(const PNServer &other);
     PNServer operator = (const PNServer &other);
+
+    void process(); //服务器处理请求
+    void func(int );
+
 private:
     volatile bool isRunning;//服务器运行状态
 
