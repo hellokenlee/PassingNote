@@ -7,6 +7,7 @@
 #include "PNThreadPool.h"
 #include "../Common/PNSocketStruct.h"
 #include <mutex>
+#include <condition_variable>
 
 using std::string;
 using std::pair;
@@ -20,7 +21,7 @@ using std::unordered_map;
 class PNServer{
 public:
     //构造函数, 默认参数为6666
-    PNServer(int port_ = 6667, int maxVal = 66666);
+    PNServer(int port_ = 6666);
     ~PNServer();
 
     void start();
@@ -45,8 +46,10 @@ private:
     PNServer(const PNServer &other);
     PNServer operator = (const PNServer &other);
 
+    void processNewConnection(const int&);
+    void processMessage(const int&);
     void process(); //服务器处理请求
-    void func(int );
+    void func(int);
 
 private:
     volatile bool isRunning;//服务器运行状态
@@ -54,6 +57,10 @@ private:
     PNSocketStruct socketStruct;//服务器网络结构
     PNThreadPool threadPool; //服务器线程池
     PNEpollManager  epollManager;
+
+    std::condition_variable conditionLock;
+    std::mutex mutexLock;
+
     unordered_map<std::string, pair<std::string, int>> userAddress;
     ///用户状态<userName, userStatus>
     unordered_map<std::string, int> userStatus;

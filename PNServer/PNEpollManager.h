@@ -4,12 +4,18 @@
 #include <sys/epoll.h>
 #include <string.h>
 #include <stdio.h>
+#include <list>
+#include <unordered_set>
+#include <mutex>
+#include <fcntl.h>
 
-const int maxEvents = 2000; //最大事件数
+class PNServer;
+const int maxEvents = 500; //最大事件数
 /***
     需要添加一个管理fd的集合, 以便析构
 **/
 class PNEpollManager{
+    friend PNServer;
 public:
     PNEpollManager();
     ~PNEpollManager();
@@ -18,44 +24,37 @@ public:
     bool delEvent(const int fd, int op = 0);
     bool  setEvent(const int fd, int op = 0);
 
-    inline int getWaitResult() const;
+    int eventPoller(int waitMs = -1);
+
     inline int readyFD(int ) const;
     inline int getMaxEvents() const;
-    //inline bool isOverload() const;
-    //inline int getCurConnected() const;
-    struct epoll_event recvEvent[maxEvents];
+
 private:
     PNEpollManager(const PNEpollManager&) = delete;
     PNEpollManager& operator = (const PNEpollManager &) = delete;
-
-    bool setNoBlock(const int &) ; //如果为ET模式需要将fd设成非阻塞
+    std::unordered_set<int> FDSet;
+    inline bool setNoBlock(const int &) ; //如果为ET模式需要将fd设成非阻塞
 
 private:
     int epollFD;
+    struct epoll_event recvEvent[maxEvents];
+    std::mutex mtx;
 };
 
-inline int PNEpollManager::getWaitResult() const{
-    int res = epoll_wait(epollFD, (struct epoll_event*)recvEvent, maxEvents, 0);
-    return res;
-}
 
-
-inline int PNEpollManager::readyFD(int index) const{
-    return recvEvent[index].data.fd;
-}
 
 
 inline int PNEpollManager::getMaxEvents() const{
     return maxEvents;
 }
 
-/*inline bool PNEpollManager::isOverload() const{
-    return currentSize == maxEvents;
-}*/
+inline bool PNEpollManager::setNoBlock(const int &fd){
+     if(fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0)|O_NONBLOCK) == -1){
+        return false;
+    }
+    return true;
+}
 
-/*inline int PNEpollManager::getCurConnected() const{
-    return currentSize;
-}*/
 
 
 #endif // PNEPOLLMANAGER_H

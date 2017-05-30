@@ -17,23 +17,24 @@ PNEpollManager::PNEpollManager(){
 PNEpollManager::~PNEpollManager(){
 }
 
-//将传入的FD设为非阻塞
-inline bool PNEpollManager::setNoBlock(const int &fd){
-     if(fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0)|O_NONBLOCK) == -1){
-        return false;
-    }
-    return true;
+int PNEpollManager::eventPoller(int waitMs){ //暂时只处理
+    return epoll_wait(epollFD, recvEvent, maxEvents, waitMs);
 }
 
-bool PNEpollManager::addEvent(const int fd, int op){ ///单单先考虑读与ET 模式,
+bool PNEpollManager::addEvent(const int fd, int op){ ///单单先考虑读与LT模式
+
     struct epoll_event temp;
     memset(&temp, 0, sizeof(temp));
     temp.data.fd = fd;
     temp.events = EPOLLIN;
-    if(!setNoBlock(fd) || epoll_ctl(epollFD, EPOLL_CTL_ADD, fd, &temp) < 0){
-        perror("add event Error");
+
+        // 不判断小于0了
+    if(setNoBlock(fd) < 0|| epoll_ctl(epollFD, EPOLL_CTL_ADD, fd, &temp) < 0){
+        close(fd);
+        perror("addEvent error");
         return false;
     }
+    FDSet.insert(fd);
     return true;
 }
 
@@ -41,12 +42,19 @@ bool PNEpollManager::addEvent(const int fd, int op){ ///单单先考虑读与ET 
 ///取消了if语句 ,但不是这里的问题
 **/
 bool PNEpollManager::delEvent(const int fd, int op){
-
-    if(epoll_ctl(epollFD, EPOLL_CTL_DEL, fd, nullptr) <0){
-        //return false;
-        perror ("delete error ");
+    std::lock_guard<std::mutex> lck(mtx);
+    if(FDSet.find(fd) == FDSet.end()){
+        return false;
     }
-    close(fd);
+    if(epoll_ctl(epollFD, EPOLL_CTL_DEL, fd, nullptr)< 0){
+        perror ("delete fd error");
+    }
+    if(close(fd) < 0){
+        perror("close error");
+    }
+    FDSet.erase(fd);
+    printf("close successful\n");
     return true;
 }
+
 
